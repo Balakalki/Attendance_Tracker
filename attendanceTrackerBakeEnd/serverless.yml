@@ -1,0 +1,43 @@
+org: aluribalakalki
+service: attendance-portal
+
+frameworkVersion: '4'
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: ap-south-1
+  stage: dev
+  environment:
+    MONGODB_URL: "mongodb+srv://aluribalakalki5:SQqhntvjcgAcsRoF@cluster0.bdvsi.mongodb.net/AttendanceManager"  # Use .env instead of hardcoding
+
+functions:
+  app:
+    handler: handler.handler
+    events:
+      - http:
+          path: /{proxy+}
+          method: ANY
+          cors:
+            origin: 'http://localhost:5173'
+            headers:
+              - Content-Type
+              - Authorization
+            allowCredentials: true
+
+plugins:
+  - serverless-offline
+
+package:
+  individually: true
+  exclude:
+    - .gitignore
+    - README.md
+    - .env
+    - test.js
+    - .dockerignore
+    - Dockerfile
+
+custom:
+  serverless-offline:
+    httpPort: 3001
