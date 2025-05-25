@@ -3,7 +3,7 @@
 {
 	"_id": "objectId",
 	"name": "John",
-	"eamail": "john@example.com",
+	"email": "john@example.com",
 	"password": "hashed_pw"
 }
 

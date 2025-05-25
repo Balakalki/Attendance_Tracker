@@ -25,3 +25,10 @@ Allow BTech students to:
 - Hosting: AWS Lambda for backend, amazon CloudFront/ Vercel/ Netlify for frontend.
 - Agile Management: Jira (solo developer use).
 
+Docs:
+
+Database schema design
+
+Deployment steps
+
+AWS Lambda setup notes

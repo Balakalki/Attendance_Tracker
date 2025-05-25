@@ -9,8 +9,8 @@ provider:
   region: ap-south-1
   stage: dev
   environment:
-    MONGODB_URL: "mongodb+srv://aluribalakalki5:SQqhntvjcgAcsRoF@cluster0.bdvsi.mongodb.net/AttendanceManager"  # Use .env instead of hardcoding
-
+    MONGODB_URL: ${env:MONGODB_URL}
+    
 functions:
   app:
     handler: handler.handler

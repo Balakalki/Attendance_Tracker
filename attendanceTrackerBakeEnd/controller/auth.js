@@ -8,16 +8,16 @@ async function handleCreateUser(req, res) {
     return req.status(400).json({ error: "all fields are required" });
 
   try {
-    await User.create({
-      fullName,
-      email,
-      password,
-    });
+
+    const newUser = new User({fullName, email, password});
+
+    await newUser.save();
+    return res.status(201).json({ success: "User created successfully" });
+    
   } catch (error) {
     return res.status(400).json({message: "email already exists"});
   }
 
-  return res.status(201).json({ success: "User created successfully" });
 }
 
 async function handleAuthenticateUser(req, res) {
