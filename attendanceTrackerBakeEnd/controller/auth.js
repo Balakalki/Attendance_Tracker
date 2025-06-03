@@ -1,3 +1,4 @@
+const Summary = require("../model/summary");
 const User = require("../model/user");
 const { createToken } = require("../service/authentication");
 
@@ -10,8 +11,10 @@ async function handleCreateUser(req, res) {
   try {
 
     const newUser = new User({fullName, email, password});
-
+    const newSummary = new Summary({userId: newUser._id});
+    
     await newUser.save();
+    await newSummary.save();
     return res.status(201).json({ success: "User created successfully" });
     
   } catch (error) {
