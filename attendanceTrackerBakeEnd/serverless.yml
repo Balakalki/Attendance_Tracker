@@ -17,27 +17,13 @@ functions:
     events:
       - http:
           path: /{proxy+}
-          method: ANY
-          cors:
-            origin: 'http://localhost:5173'
-            headers:
-              - Content-Type
-              - Authorization
-            allowCredentials: true
+          method: any
+          allowCredentials: true
+
 
 plugins:
   - serverless-offline
 
-package:
-  individually: true
-  exclude:
-    - .gitignore
-    - README.md
-    - .env
-    - test.js
-    - .dockerignore
-    - Dockerfile
-
 custom:
   serverless-offline:
-    httpPort: 3001
+    httpPort: 8000
