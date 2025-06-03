@@ -34,8 +34,8 @@ async function handleAuthenticateUser(req, res) {
     const token = createToken(user);
     res.cookie("token", token, {
       httpOnly: true,
-      secure: false, // set true when ssl is added
-      sameSite: "Strict",
+      secure: true, // set true when ssl is added
+      sameSite: "None",
       maxAge: 24 * 60 * 60 * 1000,
     });
     return res.status(200).json({ message: "Log In successfull" }); // need to use front end home page url here
