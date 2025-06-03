@@ -1,3 +1,4 @@
+const Summary = require("../model/summary");
 const User = require("../model/user");
 const { createToken } = require("../service/authentication");
 
@@ -8,16 +9,18 @@ async function handleCreateUser(req, res) {
     return req.status(400).json({ error: "all fields are required" });
 
   try {
-    await User.create({
-      fullName,
-      email,
-      password,
-    });
+
+    const newUser = new User({fullName, email, password});
+    const newSummary = new Summary({userId: newUser._id});
+    
+    await newUser.save();
+    await newSummary.save();
+    return res.status(201).json({ success: "User created successfully" });
+    
   } catch (error) {
     return res.status(400).json({message: "email already exists"});
   }
 
-  return res.status(201).json({ success: "User created successfully" });
 }
 
 async function handleAuthenticateUser(req, res) {

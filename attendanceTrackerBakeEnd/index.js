@@ -7,6 +7,9 @@ const mongodbConnection = require("./connection");
 const { checkIsAuthentic } = require("./middlewares/authentication");
 
 const authRouter = require("./routes/auth");
+const timeTableRouter = require('./routes/timeTable');
+const attendanceRouter = require('./routes/attendance');
+const summaryRouter = require('./routes/summary');
 
 mongodbConnection(process.env.MONGODB_URL);
 const app = express();
@@ -33,5 +36,11 @@ app.use(cookieParser());
 app.use(checkIsAuthentic);
 
 app.use("/api/auth", authRouter);
+
+app.use("/api/timetable/", timeTableRouter);
+
+app.use("/api/attendance", attendanceRouter);
+
+app.use("/api/summary", summaryRouter);
 
 module.exports = app;
