@@ -7,15 +7,33 @@ import {
 } from "../components/ui/card";
 import { Progress } from "../components/ui/progress";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 export default function Dashboard() {
   const [data, setData] = useState();
-  useState(async () => {
-    const summary = await axios.get(
-      `${import.meta.env.VITE_SERVER_URL}/api/summary`,
-      { withCredentials: true }
-    );
-    setData(summary?.data?.data);
-  }, []);
+    const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchSummary = async () => {
+      try {
+        const summary = await axios.get(
+          `${import.meta.env.VITE_SERVER_URL}/api/summary`,
+          { withCredentials: true }
+        );
+        setData(summary?.data?.data);
+      } catch (error) {
+        if (error.response && error.response.status === 401) {
+          navigate('/login');
+        } else {
+          console.error(error);
+        }
+      }
+    };
+
+    fetchSummary();
+  }, [navigate]);
+
+
   return (
     <div className="flex flex-col gap-4">
       <div></div>

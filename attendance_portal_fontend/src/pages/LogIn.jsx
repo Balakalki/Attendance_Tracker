@@ -2,6 +2,7 @@ import { useForm } from "react-hook-form";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 const LogIn = () => {
   const {
@@ -71,6 +72,9 @@ const LogIn = () => {
             {isSubmitting ? "Loging In..." : "Log In"}
           </button>
         </form>
+        <div>
+          don't have account <Link to={"/signup"}>Signup</Link>
+        </div>
       </div>
     </div>
   );
