@@ -26,9 +26,9 @@ const TimetableConfig = ({ onConfigSave, initialConfig }) => {
     initialConfig || {
       classTime: 45,
       labTime: 60,
-      startTime: "09:00",
-      endTime: "17:00",
-      lunchBreak: { startTime: "13:00", endTime: "14:00" },
+      startTime: "09:30",
+      endTime: "16:45",
+      lunchBreak: { startTime: "13:15", endTime: "14:30" },
       slots: [],
       subjects: [],
       days: {
@@ -67,21 +67,6 @@ const TimetableConfig = ({ onConfigSave, initialConfig }) => {
     hours = hours % 12 || 12;
     return `${hours}:${minutes} ${ampm}`;
   }
-  const days = {
-    Monday: [
-      { slotId: 0, subjectId: "sub5" },
-      { slotId: 2, subjectId: "sub2" },
-      { slotId: 6, subjectId: "sub1" },
-    ],
-    Tuesday: [
-      { slotId: 1, subjectId: "sub2" },
-      { slotId: 2, subjectId: "sub6" },
-    ],
-    Wednesday: [],
-    Thursday: [],
-    Friday: [],
-    Saturday: [],
-  };
 
   const handleConfigSave = () => {
     if (!config.startTime || !config.endTime) {
@@ -132,13 +117,13 @@ const TimetableConfig = ({ onConfigSave, initialConfig }) => {
     setSubject("");
   };
 
-  const handleSave = async() => {
+  const handleSave = async () => {
     if (!config.slots.length > 0) {
       toast.error("Please configure the timetable first");
       return;
     }
 
-    if(config.subjects.length == 0){
+    if (config.subjects.length == 0) {
       toast.info("Please add subjects");
     }
 
@@ -155,8 +140,6 @@ const TimetableConfig = ({ onConfigSave, initialConfig }) => {
     toast.success("Timetable configuration saved");
     // onConfigSave(config);
   };
-
-
 
   return (
     <Card>
@@ -280,42 +263,84 @@ const TimetableConfig = ({ onConfigSave, initialConfig }) => {
         <Button onClick={handleConfigSave} className="w-full">
           Save Configuration
         </Button>
-        {config.slots.length > 0 && <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Day</TableHead>
-              {config.slots.map((slot, index) => (
-                <TableHead key={index}>{slot.time}</TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {Object.entries(days).map(([day, session], indexd) => (
-              <TableRow key={indexd}>
-                <TableCell>{day}</TableCell>
-                {config.slots.map((slot, indexs) => (
-                  <TableCell key={indexs}>
-                    <Select onValueChange={(value) => {setConfig({...config, days:{...config.days, day: config.days[day].push({slotId: indexs, subjectId: value})}})}}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select subject" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {config.subjects.map((subject, index) => (
-                          <SelectItem key={index} value={subject.id}>
-                            {subject.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
+        {config.slots.length > 0 && (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Day</TableHead>
+                {config.slots.map((slot, index) => (
+                  <TableHead key={index}>{slot.time}</TableHead>
                 ))}
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>}
-        <Button onClick = {handleSave}>
-          Add Timetable
-        </Button>
+            </TableHeader>
+            <TableBody>
+              {Object.entries(config.days).map(([day, session], indexd) => (
+                <TableRow key={indexd}>
+                  <TableCell>{day}</TableCell>
+                  {config.slots.map((slot, indexs) => (
+                    <TableCell key={indexs}>
+                      <Select
+                        value={
+                          session?.find((entry) => entry.slotId === slot.id)
+                            ?.subjectId || ""
+                        }
+                        onValueChange={(value) => {
+                          setConfig((prevConfig) => {
+                            const prevDaySessions = prevConfig.days[day] || [];
+
+                            // Check if slot already has a subject
+                            const existingIndex = prevDaySessions.findIndex(
+                              (entry) => entry.slotId === slot.id
+                            );
+
+                            let updatedDaySessions;
+                            if (existingIndex !== -1) {
+                              // Update existing
+                              updatedDaySessions = [...prevDaySessions];
+                              updatedDaySessions[existingIndex] = {
+                                ...updatedDaySessions[existingIndex],
+                                subjectId: value,
+                              };
+                            } else {
+                              // Add new
+                              updatedDaySessions = [
+                                ...prevDaySessions,
+                                { slotId: slot.id, subjectId: value },
+                              ];
+                            }
+
+                            return {
+                              ...prevConfig,
+                              days: {
+                                ...prevConfig.days,
+                                [day]: updatedDaySessions,
+                              },
+                            };
+                          });
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select subject" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {config.subjects.map((subject, index) => (
+                            <SelectItem
+                              key={index}
+                              value={subject.id.toString()}
+                            >
+                              {subject.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+        <Button onClick={handleSave}>Add Timetable</Button>
       </CardContent>
     </Card>
   );

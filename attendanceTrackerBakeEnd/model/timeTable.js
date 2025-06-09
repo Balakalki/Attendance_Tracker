@@ -39,7 +39,7 @@ const subjectSchema = new Schema({
     type: String,
     required: true,
   },
-});
+}, {_id: false});
 
 const timeTableSchema = new Schema(
   {

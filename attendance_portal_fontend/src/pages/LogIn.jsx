@@ -14,12 +14,16 @@ const LogIn = () => {
   const [serverError, setServerError] = useState(null);
 
   const handleFormSubmit = async (data) => {
-    try{
-        setServerError(null);
-        const response = await axios.post(`${import.meta.env.VITE_SERVER_URL}/api/auth/login`, data, {withCredentials: true});
-        navigate('/');
-    }catch(error){
-        setServerError(error.response?.data?.message || "something went wrong");
+    try {
+      setServerError(null);
+      const response = await axios.post(
+        `${import.meta.env.VITE_SERVER_URL}/api/auth/login`,
+        data,
+        { withCredentials: true }
+      );
+      navigate("/");
+    } catch (error) {
+      setServerError(error.response?.data?.message || "something went wrong");
     }
   };
 
@@ -46,7 +50,9 @@ const LogIn = () => {
               placeholder="yourname.example.com"
               className="border rounded-md px-2 py-1"
             />
-            {errors.email && <p className="text-sm text-red-700">{errors.email.message}</p>}
+            {errors.email && (
+              <p className="text-sm text-red-700">{errors.email.message}</p>
+            )}
           </div>
           <div className="flex flex-col">
             <label htmlFor="password" className="font-semibold">
@@ -60,7 +66,9 @@ const LogIn = () => {
               placeholder="password"
               className="border rounded-md px-2 py-1"
             />
-            {errors.password && <p className="text-sm text-red-700">{errors.password.message}</p>}
+            {errors.password && (
+              <p className="text-sm text-red-700">{errors.password.message}</p>
+            )}
           </div>
           <button
             type="submit"
@@ -72,8 +80,11 @@ const LogIn = () => {
             {isSubmitting ? "Loging In..." : "Log In"}
           </button>
         </form>
-        <div>
-          don't have account <Link to={"/signup"}>Signup</Link>
+        <div className="flex gap-2 mt-2">
+          <p>don't have an account</p>
+          <Link className="text-blue-600" to={"/signup"}>
+            Signup
+          </Link>
         </div>
       </div>
     </div>

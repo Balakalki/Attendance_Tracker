@@ -12,6 +12,7 @@ import {
   SidebarTrigger,
   SidebarProvider,
 } from "@/components/ui/sidebar";
+import axios from "axios";
 
 
 const MainLayout = ({ children, isAdmin = false }) => {
@@ -37,11 +38,16 @@ const MainLayout = ({ children, isAdmin = false }) => {
       current: location.pathname === "/timetable"
     }
   ];
+
+  const handleLogOut = async () =>{
+    await axios.post(`${import.meta.env.VITE_SERVER_URL}/api/auth/logout`, {}, { withCredentials: true });
+    console.log("cookei cleard");
+  }
   
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gray-50">
-        <Sidebar className="border-r">
+      <div className="min-h-screen flex w-full bg-gray-100">
+        <Sidebar className="border-none">
           <SidebarHeader className="py-4">
             <div className="px-3 flex items-center">
               <span className="font-bold text-xl text-primary">Attendance Tracker</span>
@@ -71,7 +77,7 @@ const MainLayout = ({ children, isAdmin = false }) => {
           <SidebarFooter className="py-4">
             <div className="px-3">
               <Link to="/login">
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" onClick={handleLogOut} className="w-full">
                   Logout
                 </Button>
               </Link>
@@ -80,7 +86,7 @@ const MainLayout = ({ children, isAdmin = false }) => {
         </Sidebar>
         
         <div className="flex-1 flex flex-col min-h-screen overflow-x-hidden">
-          <header className="h-14 border-b bg-background flex items-center px-4 sticky top-0 z-10">
+          <header className="h-14 bg-background flex items-center px-4 sticky top-0 z-10">
             <SidebarTrigger />
             <div className="ml-auto flex items-center gap-2">
               <span className="text-sm font-medium">John Doe</span>

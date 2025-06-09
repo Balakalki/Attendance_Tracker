@@ -19,6 +19,10 @@ const userSchema = new Schema(
     salt: {
       type: String,
     },
+    isVerified:{
+      type: Boolean,
+      default: false
+    }
   },
   { timestamps: true }
 );
@@ -50,7 +54,7 @@ userSchema.static("matchPassword", async function (email, password) {
 
   if (hashedPassword !== user.password) throw new Error("incorrect Password");
 
-  return { id: user._id, email: user.email };
+  return { id: user._id, email: user.email, isVerified: user.isVerified };
 });
 
 const User = model("users", userSchema);

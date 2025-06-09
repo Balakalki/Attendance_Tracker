@@ -5,9 +5,14 @@ const subjectSchema = new Schema({
         type: String,
         required: true
     },
+    subjectName:{
+        type: String,
+        required: true
+    },
     total:{
         type: Number,
-        min: 1,
+        default:0,
+        min: 0,
     },
     absent:{
         type: Number,

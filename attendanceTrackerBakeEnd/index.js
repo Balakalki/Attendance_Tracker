@@ -10,6 +10,7 @@ const authRouter = require("./routes/auth");
 const timeTableRouter = require('./routes/timeTable');
 const attendanceRouter = require('./routes/attendance');
 const summaryRouter = require('./routes/summary');
+const otpRouter = require('./routes/otp');
 
 mongodbConnection(process.env.MONGODB_URL);
 const app = express();
@@ -42,5 +43,7 @@ app.use("/api/timetable/", timeTableRouter);
 app.use("/api/attendance", attendanceRouter);
 
 app.use("/api/summary", summaryRouter);
+
+app.use("/api/otp", otpRouter);
 
 module.exports = app;

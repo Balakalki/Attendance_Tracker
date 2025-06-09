@@ -6,6 +6,8 @@ async function handlePostAttendance(req, res) {
   const { date, class: newClass } = req.body;
   const userId = req.user?.id;
 
+  console.log("Data is ", date, "class is ", newClass);
+
   if (!userId) return res.status(401).json({ message: "unauthorized" });
 
   // const session = new startSession();
@@ -29,53 +31,67 @@ async function handlePostAttendance(req, res) {
         date,
         classes: [newClass],
       });
-      if (subjectIndex !== -1) {
+
+
         summaryDoc.subjects[subjectIndex].total += 1;
         summaryDoc.subjects[subjectIndex].present += attended;
         summaryDoc.subjects[subjectIndex].absent += 1 - attended;
-      } else {
-        summaryDoc.subjects.push({
-          subjectId: newClass.subjectId,
-          total: 1,
-          absent: 1 - attended,
-          present: attended,
-        });
-      }
+
+
       summaryDoc.totalClasses += 1;
       summaryDoc.attendedClasses += attended;
       await summaryDoc.save();
       return res.status(201).json({ attendance: createdAttendance });
-    } else {
+    }
+     else {
       const existingClassIndex = attendanceDoc.classes.findIndex(
         (cls) => cls.slotId === newClass.slotId
       );
-      console.log(existingClassIndex);
       if (existingClassIndex === -1) {
         attendanceDoc.classes.push(newClass);
+        
         await attendanceDoc.save();
-        if (subjectIndex !== -1) {
-          summaryDoc.subjects[subjectIndex].total += 1;
-          summaryDoc.subjects[subjectIndex].present += attended;
-          summaryDoc.subjects[subjectIndex].absent += 1 - attended;
-        } else {
-          summaryDoc.subjects.push({
-            subjectId: newClass.subjectId,
-            total: 1,
-            absent: 1 - attended,
-            present: attended,
-          });
-        }
+        
+        summaryDoc.subjects[subjectIndex].total += 1;
+        summaryDoc.subjects[subjectIndex].present += attended;
+        summaryDoc.subjects[subjectIndex].absent += 1 - attended;
+        
         summaryDoc.totalClasses += 1;
         await summaryDoc.save();
       } else if (
-        attendanceDoc.classes[existingClassIndex].status !== newClass.status
+        attendanceDoc.classes[existingClassIndex].status !== newClass.status ||
+        attendanceDoc.classes[existingClassIndex].subjectId !==
+        newClass.subjectId
       ) {
         const prev =
-          statusChange[attendanceDoc.classes[existingClassIndex].status];
+        statusChange[attendanceDoc.classes[existingClassIndex].status];
         const next = statusChange[newClass.status];
+        
+        console.log(subjectIndex, existingClassIndex);
+        if (
+          attendanceDoc.classes[existingClassIndex].subjectId !==
+          newClass.subjectId
+        ) {
+          const oldSub = summaryDoc.subjects.findIndex((sub) => {
+            sub.subjectId ===
+              attendanceDoc.classes[existingClassIndex].subjectId;
+          });
+          summaryDoc.subjects[subjectIndex].total += 1;
+          summaryDoc.subjects[oldSub].total -= 1;
+          summaryDoc.subjects[oldSub].present -=
+            statusChange[attendanceDoc.classes[existingClassIndex].status];
+          summaryDoc.subjects[oldSub].absent -=
+            1 - statusChange[attendanceDoc.classes[existingClassIndex].status];
+        }
+
 
         attendanceDoc.classes[existingClassIndex].status = newClass.status;
-        await attendanceDoc.save();
+        attendanceDoc.classes[existingClassIndex].subjectId =
+          newClass.subjectId;
+
+
+        await attendanceDoc.save();        
+
 
         summaryDoc.attendedClasses += next - prev;
         summaryDoc.subjects[subjectIndex].present += next - prev;
@@ -84,6 +100,7 @@ async function handlePostAttendance(req, res) {
         return res.json({ attendance: attendanceDoc });
       }
     }
+
     return res.json({ attendance: attendanceDoc });
   } catch (error) {
     console.error(error);

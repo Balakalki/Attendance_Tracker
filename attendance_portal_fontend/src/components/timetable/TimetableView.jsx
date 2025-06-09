@@ -1,4 +1,3 @@
-import axios from 'axios'
 import {
   Table,
   TableBody,
@@ -6,22 +5,22 @@ import {
   TableHead,
   TableHeader,
   TableRow
-} from '../ui/table'
-import { useEffect, useState } from 'react';
+} from '../ui/table';
 
-export default function TimetableView ({data}) {
-  // const [data, setData] = useState(null);
-  const [error, setError] = useState(null);
-
-    if (error) return <p>{error}</p>;
-  if (!data) return <p>Loading...</p>;
+export default function TimetableView ({data, error}) {
+  if(error){
+    return(
+      <div className="flex items-center justify-center h-screen">
+      <p className="text-red-600 text-xl font-semibold">{error}</p>
+    </div>
+    )
+  }
   const slots = data.slots
   const days = data.days
   const subjectMap = {}
   data.subjects.forEach(sub => {
     subjectMap[sub.id] = sub.name
   })
-
   return (
     <div className="overflow-x-auto">
       <Table>
