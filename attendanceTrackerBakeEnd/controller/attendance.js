@@ -1,95 +1,70 @@
 const Attendance = require("../model/attendance");
-const { startSession } = require("mongoose");
-const Summary = require("../model/summary");
+const Subject = require("../model/subjects");
 
 async function handlePostAttendance(req, res) {
   const { date, class: newClass } = req.body;
+  const {slotId, subjectId, status} = newClass;
   const userId = req.user?.id;
 
   if (!userId) return res.status(401).json({ message: "unauthorized" });
 
-  // const session = new startSession();
   try {
-    const attendanceDoc = await Attendance.findOne({ userId, date });
-    const summaryDoc = await Summary.findOne({ userId });
+    const [attendanceDoc, subjectDocs] = await Promise.all([
+      Attendance.findOne({ userId, date, slotId }),
+      Subject.findById(subjectId),
+    ]);
 
     const statusChange = {
       Present: 1,
       Absent: 0,
     };
 
-    const attended = statusChange[newClass.status];
+    const attended = statusChange[status];
 
-    const subjectIndex = summaryDoc.subjects.findIndex(
-      (sub) => sub.subjectId === newClass.subjectId
-    );
     if (!attendanceDoc) {
       const createdAttendance = await Attendance.create({
         userId,
         date,
-        classes: [newClass],
+        slotId,
+        subjectId,
+        status,
       });
-      if (subjectIndex !== -1) {
-        summaryDoc.subjects[subjectIndex].total += 1;
-        summaryDoc.subjects[subjectIndex].present += attended;
-        summaryDoc.subjects[subjectIndex].absent += 1 - attended;
-      } else {
-        summaryDoc.subjects.push({
-          subjectId: newClass.subjectId,
-          total: 1,
-          absent: 1 - attended,
-          present: attended,
-        });
-      }
-      summaryDoc.totalClasses += 1;
-      summaryDoc.attendedClasses += attended;
-      await summaryDoc.save();
+
+      subjectDocs.total += 1;
+      subjectDocs.attended += attended;
+
+      await subjectDocs.save();
       return res.status(201).json({ attendance: createdAttendance });
     } else {
-      const existingClassIndex = attendanceDoc.classes.findIndex(
-        (cls) => cls.slotId === newClass.slotId
-      );
-      console.log(existingClassIndex);
-      if (existingClassIndex === -1) {
-        attendanceDoc.classes.push(newClass);
-        await attendanceDoc.save();
-        if (subjectIndex !== -1) {
-          summaryDoc.subjects[subjectIndex].total += 1;
-          summaryDoc.subjects[subjectIndex].present += attended;
-          summaryDoc.subjects[subjectIndex].absent += 1 - attended;
-        } else {
-          summaryDoc.subjects.push({
-            subjectId: newClass.subjectId,
-            total: 1,
-            absent: 1 - attended,
-            present: attended,
-          });
+      if (attendanceDoc.subjectId !== subjectId) {
+        const prevSubject = await Subject.findById(attendanceDoc.subjectId);
+
+        if(prevSubject.total > 0) prevSubject.total -= 1;
+
+        if(prevSubject.attended > 0) prevSubject.attended -= statusChange[attendanceDoc.status];
+
+        subjectDocs.total += 1;
+        subjectDocs.attended += attended;
+
+        if (attendanceDoc.status !== status) {
+          attendanceDoc.status = status;
         }
-        summaryDoc.totalClasses += 1;
-        await summaryDoc.save();
-      } else if (
-        attendanceDoc.classes[existingClassIndex].status !== newClass.status
-      ) {
-        const prev =
-          statusChange[attendanceDoc.classes[existingClassIndex].status];
-        const next = statusChange[newClass.status];
 
-        attendanceDoc.classes[existingClassIndex].status = newClass.status;
-        await attendanceDoc.save();
-
-        summaryDoc.attendedClasses += next - prev;
-        summaryDoc.subjects[subjectIndex].present += next - prev;
-        summaryDoc.subjects[subjectIndex].absent += prev - next;
-        await summaryDoc.save();
-        return res.json({ attendance: attendanceDoc });
+        attendanceDoc.subjectId = subjectId;
+        await prevSubject.save();
+      } else if (attendanceDoc.status !== status) {
+        subjectDocs.attended += attended - statusChange[attendanceDoc.status];
+        attendanceDoc.status = status;
       }
+      attendanceDoc.save();
+      await subjectDocs.save();
+      return res.json({ attendance: attendanceDoc });
     }
-    return res.json({ attendance: attendanceDoc });
   } catch (error) {
-    console.error(error);
+    console.error("Error: while posting attendance ",error);
     return res
       .status(400)
-      .json({ error: error.message || "Something went wrong" });
+      .json({ error:"Something went wrong" });
   }
 }
 

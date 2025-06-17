@@ -10,47 +10,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../ui/table";
+
 import { toast } from "sonner";
 import axios from "axios";
+import { useEffect } from "react";
 
-const TimetableConfig = ({ onConfigSave, initialConfig }) => {
+const TimetableConfig = ({ onSave, initialConfig }) => {
   const [config, setConfig] = useState(
-    initialConfig || {
+    initialConfig?.timeTableData || {
       classTime: 45,
       labTime: 60,
-      startTime: "09:00",
-      endTime: "17:00",
-      lunchBreak: { startTime: "13:00", endTime: "14:00" },
+      startTime: "09:30",
+      endTime: "16:45",
+      lunchBreak: { startTime: "13:15", endTime: "14:30" },
       slots: [],
-      subjects: [],
-      days: {
-        Monday: [],
-        Tuesday: [],
-        Wednesday: [],
-        Thursday: [],
-        Friday: [],
-        Saturday: [],
-      },
     }
   );
-  const [subject, setSubject] = useState("");
-  const weekDays = [
-    "Monday",
-    "Tuesday",
-    "Wendsday",
-    "Thursday",
-    "Friday",
-    "Satday",
-    "Sunday",
-  ];
+
   // Converts "HH:MM" string to a Date object
   function parseTime(timeStr) {
     const [hours, minutes] = timeStr.split(":").map(Number);
@@ -67,23 +43,8 @@ const TimetableConfig = ({ onConfigSave, initialConfig }) => {
     hours = hours % 12 || 12;
     return `${hours}:${minutes} ${ampm}`;
   }
-  const days = {
-    Monday: [
-      { slotId: 0, subjectId: "sub5" },
-      { slotId: 2, subjectId: "sub2" },
-      { slotId: 6, subjectId: "sub1" },
-    ],
-    Tuesday: [
-      { slotId: 1, subjectId: "sub2" },
-      { slotId: 2, subjectId: "sub6" },
-    ],
-    Wednesday: [],
-    Thursday: [],
-    Friday: [],
-    Saturday: [],
-  };
 
-  const handleConfigSave = () => {
+  const handleConfigSave = async () => {
     if (!config.startTime || !config.endTime) {
       toast.error("Please set start and end times");
       return;
@@ -109,7 +70,7 @@ const TimetableConfig = ({ onConfigSave, initialConfig }) => {
 
       if (next <= end) {
         slots.push({
-          id: index,
+          sortId: index,
           time: `${formatTimeAMPM(current)} - ${formatTimeAMPM(next)}`,
         });
         index++;
@@ -118,45 +79,24 @@ const TimetableConfig = ({ onConfigSave, initialConfig }) => {
       current = next;
     }
     const updatedConfig = { ...config, slots };
-    setConfig(updatedConfig);
-  };
-
-  const addSubject = () => {
-    setConfig({
-      ...config,
-      subjects: [
-        ...config.subjects,
-        { id: config.subjects.length, name: subject },
-      ],
-    });
-    setSubject("");
-  };
-
-  const handleSave = async() => {
-    if (!config.slots.length > 0) {
-      toast.error("Please configure the timetable first");
-      return;
-    }
-
-    if(config.subjects.length == 0){
-      toast.info("Please add subjects");
-    }
-
     try {
       const res = await axios.post(
         `${import.meta.env.VITE_SERVER_URL}/api/timetable`,
-        config,
+        updatedConfig,
         { withCredentials: true }
       );
-      console.log("res is after post is ", res);
+      const newConfig = {
+        ...config,
+        slots: res.data.slotsData,
+      };
+      toast.success(res.data.message);
+
+      onSave({...initialConfig, timeTableData: res.data.timeTableData, slots: res.data.slotsData});
+      setConfig(newConfig);
     } catch (error) {
-      console.log("error is ", error);
+      toast.error(error.response.data.Error);
     }
-    toast.success("Timetable configuration saved");
-    // onConfigSave(config);
   };
-
-
 
   return (
     <Card>
@@ -249,72 +189,18 @@ const TimetableConfig = ({ onConfigSave, initialConfig }) => {
               onChange={(e) =>
                 setConfig({
                   ...config,
-                  lunchBreak: { ...config.lunchBreak, endTime: e.target.value },
+                  lunchBreak: {
+                    ...config.lunchBreak,
+                    endTime: e.target.value,
+                  },
                 })
               }
             />
           </div>
         </div>
-        <div className="space-y-4">
-          <div>
-            <Label>Subjects</Label>
-            {config.subjects.map((sub) => {
-              return <div key={sub.id}>{sub.name}</div>;
-            })}
-          </div>
-          <div className="space-y-4 md:flex gap-4">
-            <Input
-              type={"text"}
-              placeholder="subject"
-              value={subject}
-              className={"md:max-w-1/2"}
-              onChange={(e) => {
-                setSubject(e.target.value);
-              }}
-            ></Input>
-            <Button onClick={addSubject} className={""}>
-              Add Subject
-            </Button>
-          </div>
-        </div>
+        <div className="space-y-4"></div>
         <Button onClick={handleConfigSave} className="w-full">
           Save Configuration
-        </Button>
-        {config.slots.length > 0 && <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Day</TableHead>
-              {config.slots.map((slot, index) => (
-                <TableHead key={index}>{slot.time}</TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {Object.entries(days).map(([day, session], indexd) => (
-              <TableRow key={indexd}>
-                <TableCell>{day}</TableCell>
-                {config.slots.map((slot, indexs) => (
-                  <TableCell key={indexs}>
-                    <Select onValueChange={(value) => {setConfig({...config, days:{...config.days, day: config.days[day].push({slotId: indexs, subjectId: value})}})}}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select subject" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {config.subjects.map((subject, index) => (
-                          <SelectItem key={index} value={subject.id}>
-                            {subject.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>}
-        <Button onClick = {handleSave}>
-          Add Timetable
         </Button>
       </CardContent>
     </Card>

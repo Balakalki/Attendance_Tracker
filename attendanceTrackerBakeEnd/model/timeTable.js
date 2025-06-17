@@ -4,42 +4,19 @@ const timeFormatRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
 const classSchema = new Schema(
   {
-   slotId:{
-    type: String,
-    required: true,
-   },
-   subjectId:{
-    type: String,
-    required: true,
-   }
-  },
-  { _id: false }
-);
-
-const slotSchema = new Schema(
-  {
-    id: {
-      type: String,
+    slotId: {
+      type: Schema.Types.ObjectId,
       required: true,
+      ref: 'slots'
     },
-    time: {
-      type: String,
-      required: true,
+    subjectId: {
+      type: Schema.Types.ObjectId,
+      required: false,
+      ref: 'subjects'
     },
   },
   { _id: false }
 );
-
-const subjectSchema = new Schema({
-  id: {
-    type: String,
-    required: true,
-  },
-  name: {
-    type: String,
-    required: true,
-  },
-});
 
 const timeTableSchema = new Schema(
   {
@@ -51,25 +28,11 @@ const timeTableSchema = new Schema(
     },
     startTime: {
       type: String,
-      required: true,
-      validate: {
-        validator: function (v) {
-          return timeFormatRegex.test(v);
-        },
-        message: (props) =>
-          `${props.value} is not a valid time in HH:mm format!`,
-      },
+      required: true
     },
     endTime: {
       type: String,
       required: true,
-      validate: {
-        validator: function (v) {
-          return timeFormatRegex.test(v);
-        },
-        message: (props) =>
-          `${props.value} is not a valid time in HH:mm format!`,
-      },
     },
     classTime: {
       type: Number,
@@ -79,32 +42,16 @@ const timeTableSchema = new Schema(
       type: Number,
       required: true,
     },
-    lunchBreak:{
+    lunchBreak: {
       startTime: {
-      type: String,
-      required: true,
-      validate: {
-        validator: function (v) {
-          return timeFormatRegex.test(v);
-        },
-        message: (props) =>
-          `${props.value} is not a valid time in HH:mm format!`,
+        type: String,
+        required: true,
+      },
+      endTime: {
+        type: String,
+        required: true,
       },
     },
-    endTime: {
-      type: String,
-      required: true,
-      validate: {
-        validator: function (v) {
-          return timeFormatRegex.test(v);
-        },
-        message: (props) =>
-          `${props.value} is not a valid time in HH:mm format!`,
-      },
-    },
-    },
-    slots: {type: [slotSchema], required: true},
-    subjects: {type: [subjectSchema], required: true},
     days: {
       Monday: { type: [classSchema], default: [] },
       Tuesday: { type: [classSchema], default: [] },
@@ -118,19 +65,6 @@ const timeTableSchema = new Schema(
   { timestamps: true }
 );
 
-// classSchema.pre("validate", function (next) {
-//   const [startHour, startMinute] = this.startTime.split(":").map(Number);
-//   const [endHour, endMinute] = this.endTime.split(":").map(Number);
-
-//   if (
-//     endHour < startHour ||
-//     (endHour === startHour && endMinute <= startMinute)
-//   ) {
-//     return next(new Error("endTime must be after startTime"));
-//   }
-
-//   next();
-// });
 
 const timeTable = model("timeTables", timeTableSchema);
 

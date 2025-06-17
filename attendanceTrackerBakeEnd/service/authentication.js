@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const secret = process.env.SECRET;
 
 const createToken = (user) => {
+  if(!user.isVerified) return null;
   return jwt.sign(user, secret);
 };
 
