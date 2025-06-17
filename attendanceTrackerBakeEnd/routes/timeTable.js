@@ -1,12 +1,15 @@
 const { Router } = require('express');
-const { handleCreateTimeTable, handleGetTimeTable, handleUpdateTimeTable } = require('../controller/timeTable');
+const { handleCreateTimeTable, handleGetTimeTable, handleConfigTimeTable, handleAddSubject, handleDeleteSubject } = require('../controller/timeTable');
 
 const router = Router();
 
-router.post('/', handleCreateTimeTable);
+router.post('/', handleConfigTimeTable);
 
 router.get('/', handleGetTimeTable);
 
-router.put('/', handleUpdateTimeTable);
+router.put('/', handleCreateTimeTable);
+
+router.post('/subject', handleAddSubject);
+router.delete('/subject/:id', handleDeleteSubject);
 
 module.exports = router;

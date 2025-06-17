@@ -10,25 +10,44 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { Badge } from "../components/ui/badge";
+import Loader from "../components/ui/loader";
 export default function Dashboard() {
   const [data, setData] = useState();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [totalPercent, setTotalPercent] = useState();
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchSummary = async () => {
+      setLoading(true);
       try {
         const summary = await axios.get(
           `${import.meta.env.VITE_SERVER_URL}/api/summary`,
           { withCredentials: true }
         );
-        setData(summary?.data?.data);
+        const newData = summary?.data;
+        let totalClasses = 0;
+        let attendedClasses = 0;
+        const lab = newData.classTime / newData.labTime;
+        newData?.subjects?.forEach((sub) => {
+          if (sub.type === "lab") {
+            sub.total = sub.total * lab;
+            sub.attended = sub.attended * lab;
+          }
+          totalClasses += sub.total;
+          attendedClasses += sub.attended;
+        });
+        setData({ ...newData, totalClasses, attendedClasses });
+        setTotalPercent(totalClasses === 0 ? 0 : (attendedClasses * 100) / totalClasses)
       } catch (error) {
         if (error.response && error.response.status === 401) {
           navigate("/login");
         } else {
-          console.error(error);
+          setError("something went wrong");
         }
       }
+      setLoading(false);
     };
 
     fetchSummary();
@@ -48,7 +67,21 @@ export default function Dashboard() {
     return "bg-red-500";
   };
 
-  if (!data) return <p>Loading...</p>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-red-600 text-xl font-semibold">{error}</p>
+      </div>
+    );
+  }
   return (
     <div className="flex flex-col gap-4">
       <div className="border-b border-gray-200 pb-4">
@@ -84,7 +117,7 @@ export default function Dashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            {data?.totalClasses - data?.attendedClasses}
+            {(data?.totalClasses ?? 0) - (data?.attendedClasses ?? 0)}
           </CardContent>
         </Card>
         <Card>
@@ -95,10 +128,12 @@ export default function Dashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            {data?.totalClasses > 0
-              ? ((data.attendedClasses * 100) / data.totalClasses).toFixed(2) +
+            <Badge variant={getPercentageColor(totalPercent)}>
+              {data?.totalClasses > 0
+              ? (totalPercent).toFixed(2) +
                 "%"
               : "No data"}
+            </Badge>
           </CardContent>
         </Card>
       </div>
@@ -107,17 +142,14 @@ export default function Dashboard() {
           Subject-wise Attendance
         </h2>
         <div className="grid gap-4 md:grid-cols-2">
-          {data?.subjects.map((sub) => {
+          {data?.subjects?.map((sub) => {
             const percent =
-              sub.total === 0 ? "No Data" : (sub.present * 100) / sub.total;
-
-            const numericPercent = parseFloat(percent);
-
+              sub.total === 0 ? "No Data" : (sub.attended * 100) / sub.total;
             return (
-              <Card key={sub.subjectId}>
+              <Card key={sub._id}>
                 <CardHeader>
                   <CardTitle className="flex justify-between">
-                    <p>{sub.subjectName}</p>
+                    <p>{sub.name}</p>
                     <Badge variant={getPercentageColor(percent)}>
                       {percent === "No Data"
                         ? percent
@@ -125,12 +157,18 @@ export default function Dashboard() {
                     </Badge>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className={'flex flex-col gap-4'}>
-                  <p>{sub.present} classes attended out of {sub.total} classes</p>
+                <CardContent className={"flex flex-col gap-4"}>
+                  {percent === "No Data" ? (
+                    <p>No Data</p>
+                  ) : (
+                    <p>
+                      {sub.attended} classes attended out of {sub.total} classes
+                    </p>
+                  )}
                   <Progress
-                    bg="bg-green-700"
-                    className={`bg-slate-300 ${getProgressColor(percent)}`}
-                    value={numericPercent}
+                    bg={`${getProgressColor(percent)}`}
+                    className={`bg-slate-300`}
+                    value={percent}
                   />
                 </CardContent>
               </Card>

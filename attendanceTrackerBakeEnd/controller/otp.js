@@ -1,4 +1,18 @@
 const OtpModel = require("../model/otpModel");
+const mailSender = require("../service/mailSender");
+
+async function sendVerificationEmail(email, otp) {
+  try {
+    const mailResponse = await mailSender(
+      email,
+      "Attendance Tracker verification Email",
+      `<h2> Please confirm your OTP for Attendance Tracker signup</h2><p>your OTP is valid for 15 mins, Here is your OTP code: ${otp}</p>`
+    );
+  } catch (error) {
+    console.log("Error occurred whiel sending email: ", error);
+    throw error;
+  }
+}
 
 async function handleGenerateOTP(req, res) {
   const { email } = req.body;
@@ -11,13 +25,16 @@ async function handleGenerateOTP(req, res) {
       email,
       otp,
     });
-    res.json({message: "OTP sent successfully"})
+
+    await sendVerificationEmail(email, otp);
+
+    return res.json({message: "OTP sent successfully"})
   } catch (err) {
     if (err.code === 11000) {
       return res.status(409).json({ Error: "OTP has already been sent. Please check your email."});
     }
-    console.log("Error",err);
-    res.status(500).json({message: err});
+    console.log("Error: while generating OTP",err);
+    res.status(500).json({message: "something went wrong"});
   }
 }
 
@@ -36,6 +53,7 @@ async function handleVerifyOTP(req, res){
             return res.status(400).json({message: "invalid OTP"});
         }
     }catch(error){
+      console.log("Error: while verifying OTP ", error);
         return res.status(500).json({message: "something went wront"});
     }
 }

@@ -2,6 +2,7 @@ import { useForm } from "react-hook-form";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import Loader from "../components/ui/loader";
 
 const SignUp = () => {
   const {
@@ -18,6 +19,7 @@ const SignUp = () => {
   const [getOtp, setGetOtp] = useState({message: "", success: null});
   const [verifyOtp, setVerifyOtp] = useState({message: "", success: null});
   const [isVerified, setIsVerified] = useState(false);
+  const [isGettingOtp, setIsGettingOtp] = useState(false);
 
   const handleFormSubmit = async (data) => {
     if (isVerified){
@@ -37,6 +39,7 @@ const SignUp = () => {
   };
 
   const generateOTP = async () => {
+    setIsGettingOtp(true);
     const email = await trigger("email");
     setGetOtp({message: "", success: null});
     if (email) {
@@ -52,6 +55,7 @@ const SignUp = () => {
         setGetOtp({message: error.response?.data?.Error, success: false});
       }
     }
+    setIsGettingOtp(false);
   };
 
   const verifyOTP = async () => {
@@ -130,10 +134,11 @@ const SignUp = () => {
               />
               <button
                 type="button"
-                className="bg-blue-600 text-white px-2 rounded-r-md"
+                className="bg-blue-600 text-white px-2 rounded-r-md flex items-center gap-2 justify-center"
                 onClick={generateOTP}
+                disabled={isGettingOtp}
               >
-                get Otp
+                {isGettingOtp? <div className="flex"><Loader className="text-white"></Loader> sending...</div>: "get Otp"}
               </button>
             </div>
             {getOtp.message && (

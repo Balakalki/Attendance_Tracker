@@ -8,46 +8,38 @@ import {
   TabsContent,
 } from "../components/ui/tabs";
 import axios from "axios";
+import ManageTimetable from "../components/timetable/MangageTimetable";
+import Loader from "../components/ui/loader";
+import { useNavigate } from "react-router-dom";
 
 export default function Timetable() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-
-  useEffect(() => {
-    const fetchTimetable = async () => {
-      try {
-        const res = await axios.get(
-          `${import.meta.env.VITE_SERVER_URL}/api/timetable`,
-          { withCredentials: true }
-        );
-        setTimeout(() => {
-          setData(res.data);
-          setLoading(false);
-        }, 300);
-      } catch (err) {
-        console.error("error is", err);
-        if(err.response.status === 404){
-          setError("No timetable found")
-        }
-        else{
-          setError("Failed to load timetable");
-        }
-        setLoading(false);
+  const navigate = useNavigate();
+  const fetchTimetable = async () => {
+    try {
+      const res = await axios.get(
+        `${import.meta.env.VITE_SERVER_URL}/api/timetable`,
+        { withCredentials: true }
+      );
+      setData(res.data);
+      setLoading(false);
+    } catch (err) {
+      if (err.response && err.response.status === 401) {
+        navigate("/login");
       }
-    };
-
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
     fetchTimetable();
   }, []);
-
+  
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <p className="text-blue-600 text-xl font-semibold">
-          Loading timetable...
-        </p>
+        <Loader />
       </div>
     );
   }
@@ -56,13 +48,13 @@ export default function Timetable() {
       <Tabs defaultValue="viewTimetable">
         <TabsList>
           <TabsTrigger value="viewTimetable">View Timetable</TabsTrigger>
-          <TabsTrigger value="manageTimetable">Add Timetable</TabsTrigger>
+          <TabsTrigger value="manageTimetable">Manage Timetable</TabsTrigger>
         </TabsList>
         <TabsContent value="viewTimetable">
-          <TimetableView error = {error} data={data} />
+          <TimetableView data={data} />
         </TabsContent>
         <TabsContent value="manageTimetable">
-          <TimetableConfig initialConfig={data} />
+          <ManageTimetable data={data} onSave={setData} />
         </TabsContent>
       </Tabs>
     </div>

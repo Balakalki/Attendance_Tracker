@@ -27,6 +27,7 @@ app.use((req, res, next) => {
         req.body = JSON.parse(req.apiGateway.event.body);
     }
   } catch (error) {
+    console.log("Error: ", error);
     return res.status(400).json({ error: "Invalid base64 body" });
   }
   next();

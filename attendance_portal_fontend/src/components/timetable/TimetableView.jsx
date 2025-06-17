@@ -1,26 +1,39 @@
+import { useEffect } from "react";
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
-} from '../ui/table';
+  TableRow,
+} from "../ui/table";
 
-export default function TimetableView ({data, error}) {
-  if(error){
-    return(
-      <div className="flex items-center justify-center h-screen">
-      <p className="text-red-600 text-xl font-semibold">{error}</p>
-    </div>
-    )
+export default function TimetableView({ data }) {
+
+  if (!data || !data.slots || !data.timeTableData) {
+    return <p className="text-center mt-10">No timetable data available</p>;
   }
-  const slots = data.slots
-  const days = data.days
-  const subjectMap = {}
-  data.subjects.forEach(sub => {
-    subjectMap[sub.id] = sub.name
-  })
+  
+  const slots = data.slots;
+  
+  const slotMap = Object.fromEntries(
+    (data?.slots || [])?.map((slot) => [slot._id, slot])
+  );
+  const subjectMap = Object.fromEntries(
+    (data?.subjects || []).map((subject) => [subject._id, subject])
+  );
+  
+  const enrichedDays = {};
+  
+  for (const [dayName, entries] of Object.entries(data.timeTableData?.days || [])) {
+    enrichedDays[dayName] = entries.map((entry) => ({
+      slotId: entry.slotId,
+      slot: slotMap[entry.slotId] || null,
+      subjectId: entry.subjectId ?? null,
+      subject: entry.subjectId ? subjectMap[entry.subjectId] || null : null,
+    }));
+  }
+
   return (
     <div className="overflow-x-auto">
       <Table>
@@ -33,33 +46,44 @@ export default function TimetableView ({data, error}) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {Object.entries(days).map(([day, sessions], rowIndex) => {
-            const slotMap = new Array(slots.length).fill(null)
-            sessions.forEach(session => {
-              slotMap[session.slotId] = subjectMap[session.subjectId] || session.subjectId
-            })
+          {Object.entries(enrichedDays).map(([day, sessions], rowIndex) => {
+            const slotMap = new Array(slots.length).fill(null);
 
-            const cells = []
-            let i = 0
+            // Map each session to its actual slot index
+            sessions.forEach((session) => {
+              const slotIndex = slots.findIndex(
+                (slot) => slot._id === session.slotId
+              );
+              if (slotIndex !== -1) {
+                slotMap[slotIndex] = session.subject?.name || session.subjectId;
+              }
+            });
+
+            const cells = [];
+            let i = 0;
             while (i < slots.length) {
               if (!slotMap[i]) {
-                cells.push(<TableCell key={i}></TableCell>)
-                i++
-                continue
+                cells.push(<TableCell key={i}></TableCell>);
+                i++;
+                continue;
               }
 
-              const currentSubject = slotMap[i]
-              let span = 1
+              const currentSubject = slotMap[i];
+              let span = 1;
               while (slotMap[i + span] === currentSubject) {
-                span++
+                span++;
               }
 
               cells.push(
-                <TableCell key={i} colSpan={span} className="text-center font-medium">
+                <TableCell
+                  key={i}
+                  colSpan={span}
+                  className="text-center font-medium"
+                >
                   {currentSubject}
                 </TableCell>
-              )
-              i += span
+              );
+              i += span;
             }
 
             return (
@@ -67,10 +91,10 @@ export default function TimetableView ({data, error}) {
                 <TableCell className="font-semibold">{day}</TableCell>
                 {cells}
               </TableRow>
-            )
+            );
           })}
         </TableBody>
       </Table>
     </div>
-  )
+  );
 }
