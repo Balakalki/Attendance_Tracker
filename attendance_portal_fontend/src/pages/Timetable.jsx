@@ -12,6 +12,7 @@ import ManageTimetable from "../components/timetable/MangageTimetable";
 import Loader from "../components/ui/loader";
 import { useNavigate } from "react-router-dom";
 
+<<<<<<< HEAD
 export default function Timetable() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -27,6 +28,19 @@ export default function Timetable() {
     } catch (err) {
       if (err.response && err.response.status === 401) {
         navigate("/login");
+=======
+export default function Timetable(){
+    const [data, setData] = useState(null);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+    const fetchTimetable = async () => {
+      try {
+        const res = await axios.get(`${import.meta.env.VITE_SERVER_URL}/api/timetable`,{withCredentials: true});
+        setData(res.data);
+      } catch (err) {
+        setError(err.response.data.Error);
+>>>>>>> e1bc8e5a3be178864aff6f0733033cc073d9a1d7
       }
       setLoading(false);
     }
@@ -34,6 +48,7 @@ export default function Timetable() {
   useEffect(() => {
     fetchTimetable();
   }, []);
+<<<<<<< HEAD
   
 
   if (loading) {
@@ -60,3 +75,22 @@ export default function Timetable() {
     </div>
   );
 }
+=======
+  //  if (error) return <p>{error}</p>;
+  // if (!data) return <p>Loading...</p>;
+    return(
+        <div>
+            <Tabs defaultValue="viewTimetable">
+                <TabsList>
+                    <TabsTrigger value = "viewTimetable">View Timetable</TabsTrigger>
+                    <TabsTrigger value = "manageTimetable">Manage Timetable</TabsTrigger>
+                </TabsList>
+                <TabsContent value = "viewTimetable"><TimetableView data={data}/></TabsContent>
+                <TabsContent value = "manageTimetable">
+                    <TimetableConfig initialConfig={data}/>
+                </TabsContent>
+            </Tabs>
+        </div>
+    )
+}
+>>>>>>> e1bc8e5a3be178864aff6f0733033cc073d9a1d7
