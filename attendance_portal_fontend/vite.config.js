@@ -8,7 +8,7 @@ export default defineConfig({
   plugins: [react(),
     tailwindcss()
   ],
-  // base: '/Attendance_Tracker/',
+  base: '/',
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
