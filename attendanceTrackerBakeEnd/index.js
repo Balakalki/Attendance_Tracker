@@ -3,7 +3,6 @@ const express = require("express");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 
-const mongodbConnection = require("./connection");
 const { checkIsAuthentic } = require("./middlewares/authentication");
 
 const authRouter = require("./routes/auth");
@@ -12,7 +11,6 @@ const attendanceRouter = require('./routes/attendance');
 const summaryRouter = require('./routes/summary');
 const otpRouter = require('./routes/otp');
 
-mongodbConnection(process.env.MONGODB_URL);
 const app = express();
 
 app.use(
