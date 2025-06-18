@@ -25,6 +25,27 @@ async function handleCreateUser(req, res) {
   }
 }
 
+async function handleChangePassword(req, res) {
+  const { email, password } = req.body;
+
+  if (!email || !password)
+    return req.status(400).json({ error: "all fields are required" });
+
+  try {
+    const otpDoc = await OtpModel.findOne({ email });
+    if (!otpDoc || !otpDoc.isVerified) {
+      return res.status(401).json({ message: "Please validate your email" });
+    }
+    const UserDoc = await User.findOne({email});
+    UserDoc.password = password;
+    await UserDoc.save();
+    return res.status(201).json({ success: "User created successfully" });
+  } catch (error) {
+    console.log("Error: while changing password user", error);
+    return res.status(500).json({ Error: "something went wrong" });
+  }
+}
+
 async function handleAuthenticateUser(req, res) {
   const { email, password } = req.body;
 
@@ -75,5 +96,6 @@ module.exports = {
   handleCreateUser,
   handleAuthenticateUser,
   handleLogOut,
+  handleChangePassword,
   handleGetUser,
 };

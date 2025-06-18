@@ -70,6 +70,10 @@ const LogIn = () => {
               <p className="text-sm text-red-700">{errors.password.message}</p>
             )}
           </div>
+          <Link className="text-sm text-blue-600 hover:underline ml-auto" to="/forgot-password">
+  Forgot Password?
+</Link>
+
           <button
             type="submit"
             disabled={isSubmitting}

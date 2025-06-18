@@ -7,6 +7,7 @@ import MainLayout from "./components/layouts/MainLayout";
 import Attendance from "./pages/Attendance";
 import Timetable from "./pages/Timetable";
 import Dashboard from "./pages/Dashboard";
+import Password from "./pages/Password";
 function App() {
   return (
     <>
@@ -22,6 +23,7 @@ function App() {
         <Route path="/attendance" element={<MainLayout><Attendance /></MainLayout>}/>
         <Route path="/timetable" element = {<MainLayout><Timetable /></MainLayout>} />
         <Route path="/signup" element={<SignUp />} />
+        <Route path="/forgot-password" element={<Password />} />
         <Route path="/login" element={<LogIn />} />
       </Routes>
     </>
