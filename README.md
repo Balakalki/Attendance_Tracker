@@ -1,6 +1,6 @@
 # Attendance Tracker
 
 Long in with:
-email: aluribalakalki@gmail.com
+email: aluribalakalki5@gmail.com
 password: 123456
-Check out the first basic version [attendance_tracker](https://balakalki.github.io/Attendance_Tracker/).
+Check out the first basic version [here]([https://attendancetracker-abk.vercel.app]).
