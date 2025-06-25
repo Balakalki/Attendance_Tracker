@@ -1,8 +1,6 @@
 import { Routes, Route } from "react-router-dom";
-import Home from "./pages/Home";
 import SignUp from "./pages/SignUp";
 import LogIn from "./pages/LogIn";
-import NavLayout from "./components/layouts/NavLayout";
 import MainLayout from "./components/layouts/MainLayout";
 import Attendance from "./pages/Attendance";
 import Timetable from "./pages/Timetable";

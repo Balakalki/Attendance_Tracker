@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { Badge } from "../components/ui/badge";
 import Loader from "../components/ui/loader";
+
 export default function Dashboard() {
   const [data, setData] = useState();
   const [loading, setLoading] = useState(false);
@@ -39,7 +40,9 @@ export default function Dashboard() {
           attendedClasses += sub.attended;
         });
         setData({ ...newData, totalClasses, attendedClasses });
-        setTotalPercent(totalClasses === 0 ? 0 : (attendedClasses * 100) / totalClasses)
+        setTotalPercent(
+          totalClasses === 0 ? 0 : (attendedClasses * 100) / totalClasses
+        );
       } catch (error) {
         if (error.response && error.response.status === 401) {
           navigate("/login");
@@ -130,9 +133,8 @@ export default function Dashboard() {
           <CardContent>
             <Badge variant={getPercentageColor(totalPercent)}>
               {data?.totalClasses > 0
-              ? (totalPercent).toFixed(2) +
-                "%"
-              : "No data"}
+                ? totalPercent.toFixed(2) + "%"
+                : "No data"}
             </Badge>
           </CardContent>
         </Card>
