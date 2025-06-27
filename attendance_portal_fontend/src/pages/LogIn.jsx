@@ -29,7 +29,7 @@ const LogIn = () => {
 
   return (
     <div className="flex justify-center items-center h-screen">
-      <div className="bg-slate-100 border rounded-md p-8">
+      <div className="bg-slate-100 max-w-80 border rounded-md p-8">
         <div className="flex justify-center text-2xl font-bold p-4 pb-8 min-w-60 text-blue-950">
           <h1>Log In</h1>
         </div>
@@ -90,6 +90,10 @@ const LogIn = () => {
             Signup
           </Link>
         </div>
+          <p className="text-sm text-gray-700 mt-4">
+  <strong>Demo Access:</strong> Use <code>aluribalakalki5@gmail.com</code> / <code>123456</code> to log in and explore the application.
+</p>
+
       </div>
     </div>
   );
