@@ -240,11 +240,11 @@ All routes are mounted in `index.js`. Auth is via the JWT cookie (`req.user` set
 | `/login` | LogIn | — |
 | `/forgot-password` | Password | — |
 
-- **MainLayout** (`components/layouts/MainLayout.jsx`): sidebar shell (Dashboard/Attendance/Timetable nav + Logout), fetches `GET /api/auth` for the username, shows avatar initials, hosts the `<Toaster />`.
+- **MainLayout** (`components/layouts/MainLayout.jsx`, redesigned): the shared app shell — sidebar (violet brand, nav with active state, user profile card + logout) and a sticky top bar with the user avatar. Fetches `GET /api/auth` for the username and hosts the `<Toaster />`. Wraps Dashboard/Attendance/Timetable.
 - Pages redirect to `/login` on a `401` response.
 
 ### Page responsibilities
-- **Dashboard**: fetches `/api/summary`, scales lab counts by `classTime/labTime`, computes overall + per-subject %, renders cards + progress bars with threshold colors.
+- **Dashboard** (redesigned): fetches `/api/summary`, scales lab counts by `classTime/labTime`, computes overall + per-subject %. UI: a circular attendance ring, stat tiles (total/attended/missed), and color-coded subject cards. Includes a **client-side bunk calculator** — "can miss N more / attend N more to reach 75%" — computed from the existing counts (no API needed). Empty state links to the timetable.
 - **Attendance**: date picker drives `GET /api/timetable?day=&date=`; renders a card per slot with a subject `<Select>` and Present/Absent radio; `POST /api/attendance` per slot.
 - **Timetable**: tabbed — *View* (`TimetableView`) and *Manage* (`ManageTimetable` → `TimetableConfig` + `TimetableEdit`).
   - `TimetableConfig`: sets durations/times/lunch and **client-side generates slots** (skips lunch overlap), then `POST /api/timetable`.
@@ -365,7 +365,7 @@ npm run seed
 - A few user-facing strings/typos: `req.status` (should be `res.status`) in `handleCreateUser`/`handleChangePassword` validation branches; "Total Calsses" label on the dashboard.
 - `connection.js` still passes deprecated `useNewUrlParser`/`useUnifiedTopology` options (no-ops in Mongoose 8).
 - **Migration note:** the DB refactor changed `attendance.date` from `Date` → `"YYYY-MM-DD"` string and `slotId`/`subjectId` from `String` → `ObjectId`. Rows written before the refactor have the old types — run `npm run migrate:attendance` (converts in place; `--dry-run` to preview, `--drop` to wipe) before relying on per-day upserts. See [Database Migration](#database-migration).
-- Planned-but-unimplemented API: `/api/bunks/:userId` bunk calculator, `PUT /api/attendance`.
+- The `/api/bunks/:userId` bunk calculator endpoint from the original docs is **not** implemented as an API — the equivalent is computed client-side on the Dashboard. `PUT /api/attendance` is also unimplemented (the POST upsert covers it).
 - `pages/Home.jsx`, `components/layouts/Sidenav.jsx`, and `components/timetable/AddTimetable.jsx` appear to be unused/placeholder.
 - No automated tests; `test.js` is the local server entrypoint, not a test suite.
 ```
