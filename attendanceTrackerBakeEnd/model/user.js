@@ -1,5 +1,8 @@
-const { randomBytes, createHmac } = require("crypto");
+const { createHmac } = require("crypto");
+const bcrypt = require("bcryptjs");
 const { Schema, model } = require("mongoose");
+
+const BCRYPT_ROUNDS = 10;
 
 const userSchema = new Schema(
   {
@@ -16,43 +19,60 @@ const userSchema = new Schema(
       type: String,
       required: true,
     },
+    // Legacy HMAC salt. Only present on accounts created before the bcrypt
+    // migration; cleared the first time such an account logs in.
     salt: {
       type: String,
     },
-    isVerified:{
+    isVerified: {
       type: Boolean,
-      default: false
-    }
+      default: false,
+    },
   },
   { timestamps: true }
 );
 
-function getHashedPassword(salt, password) {
-  return createHmac("sha256", salt).update(password).digest("hex");
-}
-
-userSchema.pre("save", function (next) {
+// Hash the password with bcrypt whenever it changes (signup, password reset,
+// or the transparent legacy upgrade below).
+userSchema.pre("save", async function (next) {
   const user = this;
 
   if (!user.isModified("password")) return next();
 
-  const salt = randomBytes(16).toString();
-
-  const hashedPassword = getHashedPassword(salt, user.password);
-
-  this.password = hashedPassword;
-  this.salt = salt;
-
-  next();
+  try {
+    user.password = await bcrypt.hash(user.password, BCRYPT_ROUNDS);
+    user.salt = undefined; // bcrypt embeds its own salt
+    next();
+  } catch (error) {
+    next(error);
+  }
 });
+
+function legacyHash(salt, password) {
+  return createHmac("sha256", salt).update(password).digest("hex");
+}
 
 userSchema.static("matchPassword", async function (email, password) {
   const user = await User.findOne({ email });
 
   if (!user) throw new Error("incorrect email");
-  const hashedPassword = getHashedPassword(user.salt, password);
 
-  if (hashedPassword !== user.password) throw new Error("incorrect Password");
+  let isMatch;
+
+  if (user.password.startsWith("$2")) {
+    // Already a bcrypt hash.
+    isMatch = await bcrypt.compare(password, user.password);
+  } else {
+    // Legacy HMAC-SHA256 account: verify the old way, then transparently
+    // re-hash with bcrypt on success so the next login uses bcrypt.
+    isMatch = legacyHash(user.salt, password) === user.password;
+    if (isMatch) {
+      user.password = password; // pre-save hook re-hashes with bcrypt
+      await user.save();
+    }
+  }
+
+  if (!isMatch) throw new Error("incorrect Password");
 
   return { id: user._id, email: user.email, isVerified: user.isVerified };
 });

@@ -1,70 +1,36 @@
 const Attendance = require("../model/attendance");
-const Subject = require("../model/subjects");
+
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 async function handlePostAttendance(req, res) {
   const { date, class: newClass } = req.body;
-  const {slotId, subjectId, status} = newClass;
+  const { slotId, subjectId, status } = newClass || {};
   const userId = req.user?.id;
 
   if (!userId) return res.status(401).json({ message: "unauthorized" });
 
-  try {
-    const [attendanceDoc, subjectDocs] = await Promise.all([
-      Attendance.findOne({ userId, date, slotId }),
-      Subject.findById(subjectId),
-    ]);
+  if (!date || !DATE_RE.test(date))
+    return res.status(400).json({ error: "date must be in YYYY-MM-DD format" });
 
-    const statusChange = {
-      Present: 1,
-      Absent: 0,
-    };
-
-    const attended = statusChange[status];
-
-    if (!attendanceDoc) {
-      const createdAttendance = await Attendance.create({
-        userId,
-        date,
-        slotId,
-        subjectId,
-        status,
-      });
-
-      subjectDocs.total += 1;
-      subjectDocs.attended += attended;
-
-      await subjectDocs.save();
-      return res.status(201).json({ attendance: createdAttendance });
-    } else {
-      if (attendanceDoc.subjectId !== subjectId) {
-        const prevSubject = await Subject.findById(attendanceDoc.subjectId);
-
-        if(prevSubject.total > 0) prevSubject.total -= 1;
-
-        if(prevSubject.attended > 0) prevSubject.attended -= statusChange[attendanceDoc.status];
-
-        subjectDocs.total += 1;
-        subjectDocs.attended += attended;
-
-        if (attendanceDoc.status !== status) {
-          attendanceDoc.status = status;
-        }
-
-        attendanceDoc.subjectId = subjectId;
-        await prevSubject.save();
-      } else if (attendanceDoc.status !== status) {
-        subjectDocs.attended += attended - statusChange[attendanceDoc.status];
-        attendanceDoc.status = status;
-      }
-      attendanceDoc.save();
-      await subjectDocs.save();
-      return res.json({ attendance: attendanceDoc });
-    }
-  } catch (error) {
-    console.error("Error: while posting attendance ",error);
+  if (!slotId || !subjectId || !status)
     return res
       .status(400)
-      .json({ error:"Something went wrong" });
+      .json({ error: "slotId, subjectId and status are required" });
+
+  try {
+    // One record per (user, date, slot). Upsert handles both "mark" and
+    // "change subject/status" in a single atomic write. Counts are derived
+    // from these records on read, so there are no counters to keep in sync.
+    const attendance = await Attendance.findOneAndUpdate(
+      { userId, date, slotId },
+      { userId, date, slotId, subjectId, status },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+
+    return res.status(200).json({ attendance });
+  } catch (error) {
+    console.error("Error: while posting attendance ", error);
+    return res.status(400).json({ error: "Something went wrong" });
   }
 }
 

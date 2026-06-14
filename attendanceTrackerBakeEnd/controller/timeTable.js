@@ -174,7 +174,7 @@ async function handleDeleteSubject(req, res) {
     // Update the document
     await timeTable.updateOne({ userId }, { $pull: pullUpdate });
 
-    await Attendance.deleteMany({subjectId});
+    await Attendance.deleteMany({ userId, subjectId });
 
     return res.json({
       message: "Subject deleted and removed from timetable successfully",

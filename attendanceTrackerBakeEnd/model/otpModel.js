@@ -6,6 +6,7 @@ const otpSchema = new Schema({
     required: true,
     unique: true,
   },
+  // bcrypt hash of the 6-digit code — never the plaintext OTP.
   otp: {
     type: String,
     required: true,
@@ -17,10 +18,10 @@ const otpSchema = new Schema({
   createdAt: {
     type: Date,
     default: Date.now,
-    expires: 900,
+    expires: 900, // record auto-deletes 15 min after (re)issue
   },
 });
 
-const OtpModel = new model("OTP", otpSchema);
+const OtpModel = model("OTP", otpSchema);
 
 module.exports = OtpModel;
