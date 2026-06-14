@@ -2,7 +2,18 @@ import { useForm } from "react-hook-form";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import Loader from "../components/ui/loader";
+import { User, Mail, KeyRound, Loader2, CheckCircle2 } from "lucide-react";
+import AuthLayout from "../components/auth/AuthLayout";
+import {
+  FieldShell,
+  IconInput,
+  PasswordInput,
+  Alert,
+  StatusText,
+  primaryButtonClass,
+  ghostActionClass,
+} from "../components/auth/AuthField";
+import { cn } from "@/lib/utils";
 
 const SignUp = () => {
   const {
@@ -10,230 +21,206 @@ const SignUp = () => {
     handleSubmit,
     watch,
     trigger,
-    setValue,
     formState: { errors, isSubmitting },
   } = useForm();
   const navigate = useNavigate();
   const [serverError, setServerError] = useState(null);
   const [validatingOtp, setValidatingOtp] = useState(false);
-  const [getOtp, setGetOtp] = useState({message: "", success: null});
-  const [verifyOtp, setVerifyOtp] = useState({message: "", success: null});
+  const [getOtp, setGetOtp] = useState({ message: "", success: null });
+  const [verifyOtp, setVerifyOtp] = useState({ message: "", success: null });
   const [isVerified, setIsVerified] = useState(false);
   const [isGettingOtp, setIsGettingOtp] = useState(false);
 
   const handleFormSubmit = async (data) => {
-    if (isVerified){
+    if (isVerified) {
       try {
         setServerError(null);
-        await axios.post(
-          `${import.meta.env.VITE_SERVER_URL}/api/auth/signup`,
-          data
-        );
+        await axios.post(`${import.meta.env.VITE_SERVER_URL}/api/auth/signup`, data);
         navigate("/login");
       } catch (error) {
         setServerError(error.response?.data?.Error || "something went wrong");
       }
-    }else{
-      setServerError("Please verify your email")
+    } else {
+      setServerError("Please verify your email");
     }
   };
 
   const generateOTP = async () => {
     setIsGettingOtp(true);
     const email = await trigger("email");
-    setGetOtp({message: "", success: null});
+    setGetOtp({ message: "", success: null });
     if (email) {
       try {
         const getOtpRes = await axios.post(`${import.meta.env.VITE_SERVER_URL}/api/otp`, {
           email: watch("email"),
         });
-        if(getOtpRes.status === 200){
-          setGetOtp({message:"otp send successfully", success: true});
+        if (getOtpRes.status === 200) {
+          setGetOtp({ message: "OTP sent successfully", success: true });
         }
       } catch (error) {
         console.log(error);
-        setGetOtp({message: error.response?.data?.Error, success: false});
+        setGetOtp({ message: error.response?.data?.Error, success: false });
       }
     }
     setIsGettingOtp(false);
   };
 
   const verifyOTP = async () => {
-    setVerifyOtp({message: "", success: null})
+    setVerifyOtp({ message: "", success: null });
     const email = await trigger("email");
     if (!email) return;
     setValidatingOtp(true);
 
     const otp = await trigger("otp");
-
-    if (!otp) return;
+    if (!otp) {
+      setValidatingOtp(false);
+      return;
+    }
 
     try {
-      const res = await axios.post(
-        `${import.meta.env.VITE_SERVER_URL}/api/otp/verify`,
-        {
-          email: watch("email"),
-          otp: watch("otp"),
-        }
-      );
+      const res = await axios.post(`${import.meta.env.VITE_SERVER_URL}/api/otp/verify`, {
+        email: watch("email"),
+        otp: watch("otp"),
+      });
 
       if (res.status === 200) {
         setIsVerified(true);
       }
-      setVerifyOtp(
-          {message: res.data.message, success: true}
-        );
+      setVerifyOtp({ message: res.data.message, success: true });
     } catch (err) {
       console.error("OTP error", err);
-      setVerifyOtp(
-          {message: err.response?.data.message || "Some thing went wrong", success: false}
-        );
+      setVerifyOtp({
+        message: err.response?.data.message || "Some thing went wrong",
+        success: false,
+      });
     }
 
     setValidatingOtp(false);
   };
+
   return (
-    <div className="flex items-center justify-center h-screen">
-      <div className="border p-8 rounded-md bg-slate-100">
-        <div className="flex justify-center pb-8 p-4 min-w-60 text-2xl font-bold text-blue-950">
-          <h1>Sign Up</h1>
-        </div>
-        {serverError && <p className="text-red-700 max-w-50">{serverError}</p>}
-        <form
-          onSubmit={handleSubmit(handleFormSubmit)}
-          className="flex flex-col gap-4"
-        >
-          <div className="flex flex-col">
-            <label htmlFor="fullName" className="font-semibold ">
-              Full Name
-            </label>
-            <input
-              type="text"
-              autoComplete="name"
-              {...register("fullName", { required: "Full Name is required" })}
-              id="fullName"
-              placeholder="Full Name"
-              className="border rounded-md px-2 py-1"
-            />
-            {errors.fullName && (
-              <p className="text-red-700 text-sm">{errors.fullName.message}</p>
-            )}
-          </div>
-          <div className="flex flex-col">
-            <label htmlFor="email" className="font-semibold">
-              Email
-            </label>
-            <div className="grid grid-cols-[1fr_auto]">
-              <input
-                type="email"
-                autoComplete="email"
-                id="email"
-                {...register("email", { required: "email is required" })}
-                placeholder="yourname@example.com"
-                className="border rounded-l-md px-2 py-1"
-              />
-              <button
-                type="button"
-                className="bg-blue-600 text-white px-2 rounded-r-md flex items-center gap-2 justify-center"
-                onClick={generateOTP}
-                disabled={isGettingOtp}
-              >
-                {isGettingOtp? <div className="flex"><Loader className="text-white"></Loader> sending...</div>: "get Otp"}
-              </button>
-            </div>
-            {getOtp.message && (
-              <p
-                className={`text-sm ${
-                  getOtp.success ? "text-green-700" : "text-red-700"
-                }`}
-              >
-                {getOtp.message}
-              </p>
-            )}
-            {errors.email && (
-              <p className="text-sm text-red-700">{errors.email.message}</p>
-            )}
-          </div>
-          <div className="flex flex-col">
-            <label htmlFor="otp" className="font-semibold">
-              OTP
-            </label>
-            <div className="grid grid-cols-[1fr_auto]">
-              <input
-                type="text"
-                inputMode="numeric"
-                maxLength={6}
-                id="otp"
-                {...register("otp", {
-                  required: "OTP is required",
-                  pattern: {
-                    value: /^\d{6}$/,
-                    message: "OTP must be exactly 6 digits",
-                  },
-                })}
-                placeholder="Enter 6-digit code"
-                className="border rounded-l-md px-2 py-1"
-              />
-              <button
-                type="button"
-                className="bg-blue-600 text-white px-2 rounded-r-md"
-                onClick={verifyOTP}
-              >
-                Verify OTP
-              </button>
-            </div>
-            {verifyOtp.message && (
-              <p
-                className={`text-sm ${
-                  verifyOtp.success ? "text-green-700" : "text-red-700"
-                }`}
-              >
-                {verifyOtp.message}
-              </p>
-            )}
-
-            {errors.otp && (
-              <p className="text-sm text-red-700">{errors.otp.message}</p>
-            )}
-          </div>
-
-          <div className="flex flex-col">
-            <label htmlFor="password" className="font-semibold">
-              Password
-            </label>
-            <input
-              type="password"
-              autoComplete="new-password"
-              {...register("password", {
-                required: "Password is required",
-                minLength: { value: 6, message: "minimum 6 characters needed" },
-              })}
-              id="password"
-              placeholder="password"
-              className="border rounded-md px-2 py-1"
-            />
-            {errors.password && (
-              <p className="text-sm text-red-700">{errors.password.message}</p>
-            )}
-          </div>
-          <button
-            type="submit"
-            className={`${
-              isSubmitting || validatingOtp ? "bg-blue-400" : "bg-blue-600"
-            } w-32 rounded-md p-2 text-white cursor-pointer font-semibold`}
-            disabled={isSubmitting || validatingOtp}
-          >
-            {isSubmitting ? "Signing Up..." : "Sign Up"}
-          </button>
-        </form>
-        <div className="flex gap-2 mt-2">
-          <p>have an account</p>
-          <Link className="text-blue-600" to={"/login"}>
-            Login
+    <AuthLayout
+      title="Create your account"
+      subtitle="Verify your email, then set a password to get started."
+      footer={
+        <>
+          Already have an account?{" "}
+          <Link to="/login" className="font-semibold text-violet-600 hover:text-violet-700">
+            Log in
           </Link>
-        </div>
-      </div>
-    </div>
+        </>
+      }
+    >
+      {serverError && <Alert>{serverError}</Alert>}
+
+      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-5">
+        <FieldShell label="Full name" htmlFor="fullName" error={errors.fullName?.message}>
+          <IconInput
+            icon={User}
+            id="fullName"
+            type="text"
+            autoComplete="name"
+            placeholder="Your full name"
+            error={errors.fullName}
+            {...register("fullName", { required: "Full name is required" })}
+          />
+        </FieldShell>
+
+        <FieldShell label="Email" htmlFor="email" error={errors.email?.message}>
+          <div className="flex gap-2">
+            <IconInput
+              icon={Mail}
+              wrapperClassName="flex-1"
+              id="email"
+              type="email"
+              autoComplete="email"
+              placeholder="you@example.com"
+              error={errors.email}
+              {...register("email", { required: "Email is required" })}
+            />
+            <button
+              type="button"
+              onClick={generateOTP}
+              disabled={isGettingOtp}
+              className={ghostActionClass}
+            >
+              {isGettingOtp ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" /> Sending
+                </>
+              ) : (
+                "Send OTP"
+              )}
+            </button>
+          </div>
+          <StatusText success={getOtp.success}>{getOtp.message}</StatusText>
+        </FieldShell>
+
+        <FieldShell label="OTP" htmlFor="otp" error={errors.otp?.message}>
+          <div className="flex gap-2">
+            <IconInput
+              icon={KeyRound}
+              wrapperClassName="flex-1"
+              id="otp"
+              type="text"
+              inputMode="numeric"
+              maxLength={6}
+              placeholder="Enter 6-digit code"
+              error={errors.otp}
+              disabled={isVerified}
+              {...register("otp", {
+                required: "OTP is required",
+                pattern: { value: /^\d{6}$/, message: "OTP must be exactly 6 digits" },
+              })}
+            />
+            <button
+              type="button"
+              onClick={verifyOTP}
+              disabled={isVerified || validatingOtp}
+              className={cn(
+                ghostActionClass,
+                isVerified && "border-emerald-200 bg-emerald-50 text-emerald-700"
+              )}
+            >
+              {isVerified ? (
+                <>
+                  <CheckCircle2 className="size-4" /> Verified
+                </>
+              ) : validatingOtp ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" /> Verifying
+                </>
+              ) : (
+                "Verify"
+              )}
+            </button>
+          </div>
+          <StatusText success={verifyOtp.success}>{verifyOtp.message}</StatusText>
+        </FieldShell>
+
+        <FieldShell label="Password" htmlFor="password" error={errors.password?.message}>
+          <PasswordInput
+            id="password"
+            autoComplete="new-password"
+            placeholder="At least 6 characters"
+            error={errors.password}
+            {...register("password", {
+              required: "Password is required",
+              minLength: { value: 6, message: "minimum 6 characters needed" },
+            })}
+          />
+        </FieldShell>
+
+        <button
+          type="submit"
+          disabled={isSubmitting || validatingOtp}
+          className={primaryButtonClass}
+        >
+          {isSubmitting && <Loader2 className="size-4 animate-spin" />}
+          {isSubmitting ? "Creating account…" : "Create account"}
+        </button>
+      </form>
+    </AuthLayout>
   );
 };
 

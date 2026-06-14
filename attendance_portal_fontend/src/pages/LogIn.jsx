@@ -1,8 +1,16 @@
 import { useForm } from "react-hook-form";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Mail, Loader2 } from "lucide-react";
+import AuthLayout from "../components/auth/AuthLayout";
+import {
+  FieldShell,
+  IconInput,
+  PasswordInput,
+  Alert,
+  primaryButtonClass,
+} from "../components/auth/AuthField";
 
 const LogIn = () => {
   const {
@@ -16,7 +24,7 @@ const LogIn = () => {
   const handleFormSubmit = async (data) => {
     try {
       setServerError(null);
-      const response = await axios.post(
+      await axios.post(
         `${import.meta.env.VITE_SERVER_URL}/api/auth/login`,
         data,
         { withCredentials: true }
@@ -28,74 +36,72 @@ const LogIn = () => {
   };
 
   return (
-    <div className="flex justify-center items-center h-screen">
-      <div className="bg-slate-100 max-w-80 border rounded-md p-8">
-        <div className="flex justify-center text-2xl font-bold p-4 pb-8 min-w-60 text-blue-950">
-          <h1>Log In</h1>
-        </div>
-        {serverError && <p className="text-red-700 max-w-50">{serverError}</p>}
-        <form
-          onSubmit={handleSubmit(handleFormSubmit)}
-          className="flex flex-col gap-4"
-        >
-          <div className="flex flex-col">
-            <label htmlFor="email" className="font-semibold">
-              Email
-            </label>
-            <input
-              {...register("email", { required: "eamil is required" })}
-              autoComplete="email"
-              type="email"
-              id="email"
-              placeholder="yourname.example.com"
-              className="border rounded-md px-2 py-1"
-            />
-            {errors.email && (
-              <p className="text-sm text-red-700">{errors.email.message}</p>
-            )}
-          </div>
-          <div className="flex flex-col">
-            <label htmlFor="password" className="font-semibold">
-              Password
-            </label>
-            <input
-              {...register("password", { required: "password is required" })}
-              autoComplete="current-password"
-              type="password"
-              id="password"
-              placeholder="password"
-              className="border rounded-md px-2 py-1"
-            />
-            {errors.password && (
-              <p className="text-sm text-red-700">{errors.password.message}</p>
-            )}
-          </div>
-          <Link className="text-sm text-blue-600 hover:underline ml-auto" to="/forgot-password">
-  Forgot Password?
-</Link>
-
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className={`${
-              isSubmitting ? "bg-blue-400" : "bg-blue-600"
-            } text-white w-32 rounded-md p-2 font-semibold`}
-          >
-            {isSubmitting ? "Loging In..." : "Log In"}
-          </button>
-        </form>
-        <div className="flex gap-2 mt-2">
-          <p>don't have an account</p>
-          <Link className="text-blue-600" to={"/signup"}>
-            Signup
+    <AuthLayout
+      title="Welcome back"
+      subtitle="Log in to track your attendance and stay in the safe zone."
+      footer={
+        <>
+          Don&rsquo;t have an account?{" "}
+          <Link to="/signup" className="font-semibold text-violet-600 hover:text-violet-700">
+            Sign up
           </Link>
-        </div>
-          <p className="text-sm text-gray-700 mt-4">
-  <strong>Demo Access:</strong> Use <code>aluribalakalki5@gmail.com</code> / <code>123456</code> to log in and explore the application.
-</p>
+        </>
+      }
+    >
+      {serverError && <Alert>{serverError}</Alert>}
 
+      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-5">
+        <FieldShell label="Email" htmlFor="email" error={errors.email?.message}>
+          <IconInput
+            icon={Mail}
+            id="email"
+            type="email"
+            autoComplete="email"
+            placeholder="you@example.com"
+            error={errors.email}
+            {...register("email", { required: "Email is required" })}
+          />
+        </FieldShell>
+
+        <FieldShell
+          label="Password"
+          htmlFor="password"
+          error={errors.password?.message}
+          labelRight={
+            <Link
+              to="/forgot-password"
+              className="text-xs font-medium text-violet-600 hover:text-violet-700"
+            >
+              Forgot password?
+            </Link>
+          }
+        >
+          <PasswordInput
+            id="password"
+            autoComplete="current-password"
+            placeholder="Enter your password"
+            error={errors.password}
+            {...register("password", { required: "Password is required" })}
+          />
+        </FieldShell>
+
+        <button type="submit" disabled={isSubmitting} className={primaryButtonClass}>
+          {isSubmitting && <Loader2 className="size-4 animate-spin" />}
+          {isSubmitting ? "Logging in…" : "Log in"}
+        </button>
+      </form>
+
+      <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs leading-relaxed text-slate-500">
+        <span className="font-semibold text-slate-600">Demo access</span> — log in with{" "}
+        <code className="rounded bg-white px-1.5 py-0.5 text-[11px] text-slate-700 ring-1 ring-slate-200">
+          aluribalakalki5@gmail.com
+        </code>{" "}
+        /{" "}
+        <code className="rounded bg-white px-1.5 py-0.5 text-[11px] text-slate-700 ring-1 ring-slate-200">
+          123456
+        </code>
       </div>
-    </div>
+    </AuthLayout>
   );
 };
 

@@ -250,8 +250,14 @@ All routes are mounted in `index.js`. Auth is via the JWT cookie (`req.user` set
   - `TimetableConfig`: sets durations/times/lunch and **client-side generates slots** (skips lunch overlap), then `POST /api/timetable`.
   - `TimetableEdit`: add/delete subjects and assign subjects to slots per day grid, then `PUT /api/timetable`.
   - `TimetableView`: read-only weekly grid, merges consecutive equal subjects via `colSpan`.
-- **SignUp**: email → get OTP → verify OTP → then submit signup.
-- **LogIn / Password**: standard forms via react-hook-form.
+- **Auth pages (LogIn / SignUp / Password)**: redesigned with a shared split-screen layout — a violet gradient brand panel + a clean white form card. Logic is unchanged (react-hook-form, axios, the OTP verify flow); only presentation changed.
+  - `components/auth/AuthLayout.jsx`: the split-screen shell (brand panel on `lg+`, compact brand header on mobile), takes `title` / `subtitle` / `children` / `footer`.
+  - `components/auth/AuthField.jsx`: shared form primitives — `FieldShell`, `IconInput`, `PasswordInput` (show/hide toggle), `Alert`, `StatusText`, and the `primaryButtonClass` / `ghostActionClass` / `inputClass` style constants. **Reuse these when building the other pages** to keep one design language.
+
+### Design System
+- **Tailwind v4** with tokens in `src/global.css`. The token set is now **complete** — `:root` defines the full shadcn palette (`primary`, `primary-foreground`, `secondary`, `muted`, `accent`, `destructive`, `border`, `input`, `ring`, `radius`, card/popover) and `@theme` maps each to a `--color-*` utility. (Previously several of these were missing, so shadcn primitives like `border-input` / `text-primary-foreground` / `ring-ring` silently rendered no styles.)
+- **Brand color:** violet — `--primary: 256 72% 58%`. A `@layer base` sets the default border color, body background/foreground, and font smoothing.
+- `src/App.css` is unused Vite boilerplate (not imported anywhere).
 
 ---
 
