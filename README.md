@@ -245,11 +245,11 @@ All routes are mounted in `index.js`. Auth is via the JWT cookie (`req.user` set
 
 ### Page responsibilities
 - **Dashboard** (redesigned): fetches `/api/summary`, scales lab counts by `classTime/labTime`, computes overall + per-subject %. UI: a circular attendance ring, stat tiles (total/attended/missed), and color-coded subject cards. Includes a **client-side bunk calculator** — "can miss N more / attend N more to reach 75%" — computed from the existing counts (no API needed). Empty state links to the timetable.
-- **Attendance**: date picker drives `GET /api/timetable?day=&date=`; renders a card per slot with a subject `<Select>` and Present/Absent radio; `POST /api/attendance` per slot.
-- **Timetable**: tabbed — *View* (`TimetableView`) and *Manage* (`ManageTimetable` → `TimetableConfig` + `TimetableEdit`).
-  - `TimetableConfig`: sets durations/times/lunch and **client-side generates slots** (skips lunch overlap), then `POST /api/timetable`.
-  - `TimetableEdit`: add/delete subjects and assign subjects to slots per day grid, then `PUT /api/timetable`.
-  - `TimetableView`: read-only weekly grid, merges consecutive equal subjects via `colSpan`.
+- **Attendance** (redesigned): a date navigator (prev/next day + picker + "Jump to today") drives `GET /api/timetable?day=&date=`; renders a period card per slot with a subject `<Select>`, a segmented **Present/Absent** toggle, a "Saved" badge for already-marked slots, and a per-slot `POST /api/attendance`. Empty state when nothing is scheduled. (Marking requires a selected subject.)
+- **Timetable** (redesigned): tabbed — *View* and *Manage* (segmented-control tabs). *Manage* nests *Timings* and *Subjects & Grid*.
+  - `TimetableConfig` (*Timings*): a card form for durations/times/lunch; **client-side generates slots** (skips lunch overlap), then `POST /api/timetable`. Class durations 45/50/55/60; lab durations 50/60/90/100/120.
+  - `TimetableEdit` (*Subjects & Grid*): subject chips (class/lab icons + delete) with an add row, and a styled weekly assignment grid of per-cell subject dropdowns, then `PUT /api/timetable`.
+  - `TimetableView`: read-only weekly grid (violet subject chips), merges consecutive equal subjects via `colSpan`; empty state when unconfigured.
 - **Auth pages (LogIn / SignUp / Password)**: redesigned with a shared split-screen layout — a violet gradient brand panel + a clean white form card. Logic is unchanged (react-hook-form, axios, the OTP verify flow); only presentation changed.
   - `components/auth/AuthLayout.jsx`: the split-screen shell (brand panel on `lg+`, compact brand header on mobile), takes `title` / `subtitle` / `children` / `footer`.
   - `components/auth/AuthField.jsx`: shared form primitives — `FieldShell`, `IconInput`, `PasswordInput` (show/hide toggle), `Alert`, `StatusText`, and the `primaryButtonClass` / `ghostActionClass` / `inputClass` style constants. **Reuse these when building the other pages** to keep one design language.
