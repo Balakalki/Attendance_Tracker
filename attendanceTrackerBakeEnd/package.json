@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "nodemon test",
     "start": "node test",
-    "migrate:attendance": "node scripts/migrateAttendance.js"
+    "migrate:attendance": "node scripts/migrateAttendance.js",
+    "seed": "node scripts/seedData.js"
   },
   "author": "Aluri Bala Kalki",
   "license": "ISC",

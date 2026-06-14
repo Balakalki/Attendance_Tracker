@@ -335,6 +335,14 @@ npm run migrate:attendance -- --drop      # OR wipe the collection for a clean s
 ```
 The script (`scripts/migrateAttendance.js`) uses `MONGODB_URL` from `.env`. Conversions that would collide with the unique `{userId,date,slotId}` index are reported and skipped. Password/OTP hashing needs **no** migration — legacy password accounts upgrade to bcrypt automatically on next login.
 
+### Seed Demo Data
+Populate the demo user (`aluribalakalki5@gmail.com`) with a realistic 2nd-year CSE timetable (50-min periods, Mon–Sat, labs as 2-period blocks) and ~6 weeks of attendance history with varied per-subject percentages:
+```bash
+cd attendanceTrackerBakeEnd
+npm run seed
+```
+`scripts/seedData.js` is **idempotent** — it wipes that user's timetable/slots/subjects/attendance and reseeds (it never touches the account/password). Edit the `CONFIG`, `SUBJECTS`, and `WEEK` constants at the top to change the dataset.
+
 ---
 
 ## Deployment
