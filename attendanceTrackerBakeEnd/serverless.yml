@@ -13,7 +13,7 @@ provider:
     SECRET: ${env:SECRET}
     MAIL_USER: ${env:MAIL_USER}
     MAIL_PASS: ${env:MAIL_PASS}
-    ALLOWED_ORIGINS: ${env:ALLOWED_ORIGINS, 'http://localhost:5173'}
+    ALLOWED_ORIGINS: ${env:ALLOWED_ORIGINS, 'http://localhost:5173,https://attendancetracker-abk.vercel.app'}
 
 functions:
   app:
