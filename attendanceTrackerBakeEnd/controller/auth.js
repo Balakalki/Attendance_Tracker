@@ -2,6 +2,19 @@ const OtpModel = require("../model/otpModel");
 const User = require("../model/user");
 const { createToken } = require("../service/authentication");
 
+// The front-end (Vercel) and back-end (API Gateway) are on different
+// domains, so the auth cookie is cross-site. Browsers only store/send a
+// cross-site cookie when it is SameSite=None AND Secure. We detect the
+// deployed Lambda via AWS_LAMBDA_FUNCTION_NAME (always set on Lambda, never
+// locally) and keep Lax/non-secure for local http://localhost development.
+const isLambda = Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME);
+const cookieOptions = {
+  httpOnly: true,
+  secure: isLambda,
+  sameSite: isLambda ? "none" : "lax",
+  path: "/",
+};
+
 async function handleCreateUser(req, res) {
   const { fullName, email, password } = req.body;
 
@@ -56,9 +69,7 @@ async function handleAuthenticateUser(req, res) {
     const user = await User.matchPassword(email, password);
     const token = createToken(user);
     res.cookie("token", token, {
-      httpOnly: true,
-      secure: false, //make true for deployment
-      sameSite: "Lax", // make None for deployment
+      ...cookieOptions,
       maxAge: 24 * 60 * 60 * 1000,
     });
     return res.status(200).json({ message: "Log In successfull" }); // need to use front end home page url here
@@ -69,12 +80,7 @@ async function handleAuthenticateUser(req, res) {
 }
 
 function handleLogOut(req, res) {
-  res.clearCookie("token", {
-    httpOnly: true,
-    secure: false, // make true for deployment
-    sameSite: "Lax", // make None for deployment
-    path: "/",
-  });
+  res.clearCookie("token", cookieOptions);
   res.status(200).json({ message: "Logged out" });
 }
 
