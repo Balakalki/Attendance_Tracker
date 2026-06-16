@@ -41,7 +41,7 @@ export default function Attendance() {
       try {
         const newDay = selectedDate.toLocaleDateString("en-us", { weekday: "long" });
         setDay(newDay);
-        const formatedDate = selectedDate.toISOString().split("T")[0];
+        const formatedDate = format(selectedDate, "yyyy-MM-dd");
         const dataFromServer = await axios.get(
           `${import.meta.env.VITE_SERVER_URL}/api/timetable?day=${newDay}&date=${formatedDate}`,
           { withCredentials: true }
@@ -87,7 +87,7 @@ export default function Attendance() {
       toast.error("Please select a subject first");
       return;
     }
-    const formatedDate = selectedDate.toISOString().split("T")[0];
+    const formatedDate = format(selectedDate, "yyyy-MM-dd");
     const subjectName = data.subjects.find((sub) => sub._id === subjectId);
     try {
       const res = await axios.post(

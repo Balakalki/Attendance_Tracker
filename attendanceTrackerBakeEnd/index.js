@@ -15,9 +15,25 @@ const otpRouter = require('./routes/otp');
 // mongodbConnection(process.env.MONGODB_URL);
 const app = express();
 
+// Allowlist of front-end origins permitted to call this API. Set the
+// ALLOWED_ORIGINS env var to a comma-separated list, e.g.
+// "http://localhost:5173,https://your-app.vercel.app". Falls back to the
+// local dev origin so nothing breaks when the var is unset.
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || "http://localhost:5173")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: (origin, callback) => {
+      // No Origin header => non-browser caller (curl, health checks,
+      // server-to-server). Allow those through.
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error(`Origin ${origin} is not allowed by CORS`));
+    },
     credentials: true,
   })
 );

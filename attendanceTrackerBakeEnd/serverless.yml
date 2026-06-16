@@ -5,12 +5,16 @@ frameworkVersion: '4'
 
 provider:
   name: aws
-  runtime: nodejs20.x
+  runtime: nodejs22.x
   region: ap-south-1
   stage: dev
   environment:
     MONGODB_URL: ${env:MONGODB_URL}
-    
+    SECRET: ${env:SECRET}
+    MAIL_USER: ${env:MAIL_USER}
+    MAIL_PASS: ${env:MAIL_PASS}
+    ALLOWED_ORIGINS: ${env:ALLOWED_ORIGINS, 'http://localhost:5173'}
+
 functions:
   app:
     handler: handler.handler

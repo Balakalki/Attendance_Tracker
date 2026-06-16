@@ -5,8 +5,13 @@
   "scripts": {
     "dev": "nodemon test",
     "start": "node test",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "migrate:attendance": "node scripts/migrateAttendance.js",
     "seed": "node scripts/seedData.js"
+  },
+  "engines": {
+    "node": ">=22"
   },
   "author": "Aluri Bala Kalki",
   "license": "ISC",
@@ -24,6 +29,9 @@
     "serverless-http": "^3.2.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.13.0",
+    "eslint": "^9.13.0",
+    "globals": "^15.11.0",
     "nodemon": "^3.1.10",
     "serverless-offline": "^14.4.0"
   }
