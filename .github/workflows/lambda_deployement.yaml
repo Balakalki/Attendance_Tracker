@@ -1,5 +1,6 @@
 name: Deploy Lambda Function
 
+# Deploys the Express backend to AWS Lambda via the Serverless Framework.
 # Continuous Deployment: every push to main that touches the backend
 # (or this workflow) ships the latest code to AWS Lambda automatically.
 # You can also trigger it by hand from the Actions tab (workflow_dispatch).
