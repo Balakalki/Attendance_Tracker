@@ -13,7 +13,11 @@ provider:
     SECRET: ${env:SECRET}
     MAIL_USER: ${env:MAIL_USER}
     MAIL_PASS: ${env:MAIL_PASS}
-    ALLOWED_ORIGINS: ${env:ALLOWED_ORIGINS, 'http://localhost:5173,https://attendancetracker-abk.vercel.app'}
+    # Set the ALLOWED_ORIGINS GitHub secret to your real origins, e.g.
+    # "http://localhost:5173,https://attendancetracker-abk.vercel.app".
+    # The default is empty here (a URL with "://" can't be an inline
+    # Serverless default); the app then falls back to localhost.
+    ALLOWED_ORIGINS: ${env:ALLOWED_ORIGINS, ''}
 
 functions:
   app:
