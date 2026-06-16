@@ -12,6 +12,11 @@ on:
       - '.github/workflows/lambda_deployement.yaml'
   workflow_dispatch:
 
+# Never run two deploys at once; a newer push cancels an in-flight one.
+concurrency:
+  group: deploy-lambda
+  cancel-in-progress: false
+
 jobs:
   deploy:
     name: Deploy to AWS Lambda
