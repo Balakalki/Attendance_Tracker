@@ -10,7 +10,14 @@ import {
   PasswordInput,
   Alert,
   primaryButtonClass,
+  ghostActionClass,
 } from "../components/auth/AuthField";
+
+// Shared demo account so visitors can try the app without signing up.
+const DEMO_CREDENTIALS = {
+  email: "aluribalakalki5@gmail.com",
+  password: "123456",
+};
 
 const LogIn = () => {
   const {
@@ -20,18 +27,34 @@ const LogIn = () => {
   } = useForm();
   const navigate = useNavigate();
   const [serverError, setServerError] = useState(null);
+  const [demoLoading, setDemoLoading] = useState(false);
+
+  const login = async (credentials) => {
+    setServerError(null);
+    await axios.post(
+      `${import.meta.env.VITE_SERVER_URL}/api/auth/login`,
+      credentials,
+      { withCredentials: true }
+    );
+    navigate("/");
+  };
 
   const handleFormSubmit = async (data) => {
     try {
-      setServerError(null);
-      await axios.post(
-        `${import.meta.env.VITE_SERVER_URL}/api/auth/login`,
-        data,
-        { withCredentials: true }
-      );
-      navigate("/");
+      await login(data);
     } catch (error) {
       setServerError(error.response?.data?.message || "something went wrong");
+    }
+  };
+
+  const handleDemoLogin = async () => {
+    try {
+      setDemoLoading(true);
+      await login(DEMO_CREDENTIALS);
+    } catch (error) {
+      setServerError(error.response?.data?.message || "something went wrong");
+    } finally {
+      setDemoLoading(false);
     }
   };
 
@@ -85,22 +108,31 @@ const LogIn = () => {
           />
         </FieldShell>
 
-        <button type="submit" disabled={isSubmitting} className={primaryButtonClass}>
+        <button
+          type="submit"
+          disabled={isSubmitting || demoLoading}
+          className={primaryButtonClass}
+        >
           {isSubmitting && <Loader2 className="size-4 animate-spin" />}
           {isSubmitting ? "Logging in…" : "Log in"}
         </button>
       </form>
 
-      <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs leading-relaxed text-slate-500">
-        <span className="font-semibold text-slate-600">Demo access</span> — log in with{" "}
-        <code className="rounded bg-white px-1.5 py-0.5 text-[11px] text-slate-700 ring-1 ring-slate-200">
-          aluribalakalki5@gmail.com
-        </code>{" "}
-        /{" "}
-        <code className="rounded bg-white px-1.5 py-0.5 text-[11px] text-slate-700 ring-1 ring-slate-200">
-          123456
-        </code>
+      <div className="my-5 flex items-center gap-3 text-xs text-slate-400">
+        <span className="h-px flex-1 bg-slate-200" />
+        or
+        <span className="h-px flex-1 bg-slate-200" />
       </div>
+
+      <button
+        type="button"
+        onClick={handleDemoLogin}
+        disabled={isSubmitting || demoLoading}
+        className={`${ghostActionClass} w-full`}
+      >
+        {demoLoading && <Loader2 className="size-4 animate-spin" />}
+        {demoLoading ? "Signing in…" : "Try the demo account"}
+      </button>
     </AuthLayout>
   );
 };
